@@ -2,6 +2,18 @@
 -- found (e.g. lgi). If LuaRocks is not installed, do nothing.
 pcall(require, "luarocks.loader")
 
+-- Modkey (Mod4 es tecla de Windows)
+modkey = "Mod4"
+
+-- Programas por defecto
+usr_default = {
+    TERMINAL = "wezterm",
+    EDITOR = "wezterm -e " .. "nvim",
+    BROWSER = "brave",
+    FILE_MANAGER = "thunar",
+    MUSIC = "spotify",
+}
+
 -- Standard awesome library
 local gears = require("gears")
 local awful = require("awful")
@@ -35,19 +47,6 @@ end)
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
-
--- This is used later as the default terminal and editor to run.
-terminal = "wezterm"
-editor = os.getenv("EDITOR") or "nano"
-editor_cmd = terminal .. " -e " .. editor
-
--- Default modkey.
--- Usually, Mod4 is the key with a logo between Control and Alt.
--- If you do not like this or do not have such a key,
--- I suggest you to remap Mod4 to another key using xmodmap or other tools.
--- However, you can use another modifier like Mod1, but it may interact with others.
-modkey = "Mod4"
--- }}}
 
 -- {{{ Menu
 -- Create a launcher widget and a main menu

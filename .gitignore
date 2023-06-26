@@ -13,6 +13,8 @@ Downloads
 .ssh
 .idlerc
 .gnupg
+.gtkrc-2.0
+.icons
 
 .config/BraveSoftware
 .config/mimeapps.list
@@ -21,6 +23,10 @@ Downloads
 .config/pulse
 .config/github-copilot
 .config/gtk-3.0
+.config/gtk-2.0
+.config/Thunar
+.config/xfce4
+.config/viewnior
 
 .local/lib
 .local/share

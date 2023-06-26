@@ -5,11 +5,11 @@
 # TODO: Agregar shortcuts para ver las funciones
 
 function change_wall() {
-    wall_dir="${XDG_DATA_HOME:-$HOME/Pictures}/wallpaper"
+    wall_dir="${XDG_DATA_HOME:-$HOME/.local/share}/wallpaper"
 
     if [[ ! -z "$new_wall" ]]; then
         case "$(file --mime-type -b "$new_wall")" in
-            image/* ) ln -sf "$new_wall" "$wall_dir" &&
+            image/* ) ln -sf "$(readlink -f $new_wall)" "$wall_dir" &&
                 notify-send -i "$wall_dir" "Fondo de pantalla cambiado." ;;
             *) notify-send "Error" "Imagen no valida." ;;
         esac
