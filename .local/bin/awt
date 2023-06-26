@@ -1,0 +1,550 @@
+#!/bin/sh
+
+# Todas las dependencias en DEPENDENCIES.md
+# El archivo esta muy desordenado pero prefiero tener todo esto en el mismo comando
+# TODO: Agregar shortcuts para ver las funciones
+
+function change_wall() {
+    wall_dir="${XDG_DATA_HOME:-$HOME/Pictures}/wallpaper"
+
+    if [[ ! -z "$new_wall" ]]; then
+        case "$(file --mime-type -b "$new_wall")" in
+            image/* ) ln -sf "$new_wall" "$wall_dir" &&
+                notify-send -i "$wall_dir" "Fondo de pantalla cambiado." ;;
+            *) notify-send "Error" "Imagen no valida." ;;
+        esac
+    fi
+
+    xwallpaper --zoom "$wall_dir"
+}
+
+function power_opts() {
+    ctl='systemctl'
+    dm_command="$(printf "lock\nleave dwm\nrenew dwm\nhibernate\nreboot\nshutdown\nsleep\ndisplay off" | dmenu -i -p 'Action: ')"
+    case "$dm_command" in
+        'lock') slock ;;
+        'leave dwm') kill -TERM "$(pgrep -u "$USER" "\bdwm$")" ;;
+        'renew dwm') kill -HUP "$(pgrep -u "$USER" "\bdwm$")" ;;
+        'hibernate') slock $ctl hibernate -i ;;
+        'sleep') slock $ctl suspend ;;
+        'reboot') sudo $ctl reboot -i ;;
+        'shutdown') shutdown now ;;
+        'display off') xset dpms force off ;;
+        *) exit 1 ;;
+    esac
+}
+
+function select_emoji() {
+    emoji=$(cut -d ';' -f1 ~/.dotfiles/.local/share/icons/emoji | dmenu -i -l 30 | sed "s/ .*//")
+    if [ -n "$opt" ]; then
+        xdotool type "$emoji"
+    else
+        printf "$emoji" | xclip -selection clipboard
+        dunstify "'$emoji' copiado al clipboard."
+    fi
+}
+
+function select_display() {
+    multimon() {
+        mirror=$(printf "no\\nyes" | dmenu -i -p "Mirror displays?")
+        if [ "$mirror" = "yes" ]; then
+            external=$(echo "$all_screens" | dmenu -i -p "Optimize resolution for:")
+            internal=$(echo "$all_screens" | grep -v "$external")
+
+            res_external=$(xrandr --query | sed -n "/^$external/,/\+/p" | \
+                tail -n 1 | awk '{print $1}')
+            res_internal=$(xrandr --query | sed -n "/^$internal/,/\+/p" | \
+                tail -n 1 | awk '{print $1}')
+
+            res_ext_x=$(echo "$res_external" | sed 's/x.*//')
+            res_ext_y=$(echo "$res_external" | sed 's/.*x//')
+            res_int_x=$(echo "$res_internal" | sed 's/x.*//')
+            res_int_y=$(echo "$res_internal" | sed 's/.*x//')
+
+            scale_x=$(echo "$res_ext_x / $res_int_x" | bc -l)
+            scale_y=$(echo "$res_ext_y / $res_int_y" | bc -l)
+
+            xrandr --output "$external" --auto --scale 1.0x1.0 \
+                --output "$internal" --auto --same-as "$external" \
+                --scale "$scale_x"x"$scale_y"
+        else
+
+            primary=$(echo "$all_screens" | dmenu -i -p "Seleccione el monitor principal:")
+            secondary=$(echo "$all_screens" | grep -v "$primary")
+            direction=$(printf "left\\nright" | dmenu -i -p "En que lado de $primary debe estar $secondary?")
+            xrandr --output "$primary" --primary --auto --scale 1.0x1.0 --output "$secondary" --"$direction"-of "$primary" --auto --scale 1.0x1.0
+        fi
+    }
+
+    onescreen() {
+        xrandr --output "$1" --auto --scale 1.0x1.0 $(echo "$monitors" | grep -v "\b$1" | awk '{print "--output", $1, "--off"}' | paste -sd ' ' -)
+    }
+
+    monitors=$(xrandr -q | grep "connected")
+    all_screens=$(echo "$monitors" | awk '/ connected/ {print $1}')
+    menu=$(printf "%s\\nmulti-monitor\\nmanual selection" "$all_screens" | dmenu -i -p "Menu:") &&
+        case "$menu" in
+	        "multi-monitor") multimon ;;
+	        *) onescreen "$menu" ;;
+        esac
+    xrandr --output DP-1 --mode 1920x1080 --rate 144
+    awt --walls
+}
+
+function screenshot() {
+    output="$(date '+%y%m%d-%H%M-%S').png"
+    xclip_cmd="xclip -sel clip -t image/png"
+    path="/home/gerry/Pictures/screenshots"
+    case "$(printf "a selected area\\ncurrent window\\nfull screen\\na selected area (copy)\\ncurrent window (copy)\\nfull screen (copy)" | dmenu -l 6 -i -p "Screenshot which area?")" in
+        "a selected area") maim -s "$path"/selected/pic-selected-"${output}" && dunstify -i "photo" -u low -t 2000 "Imagen guardada en galeria" ;;
+        "current window") maim -q -d 0.2 -i "$(xdotool getactivewindow)" "$path"/window/pic-window-"${output}" && dunstify -i "photo" -u low -t 2000 "Imagen guardada en galeria" ;;
+        "full screen") maim -q -d 0.2 "$path"/full/pic-full-"${output}" && dunstify -i "photo" -u low -t 2000 "Imagen guardada en galeria" ;;
+        "a selected area (copy)") maim -s | ${xclip_cmd} && dunstify -i "photo" -u low -t 2000 "Imagen copiada al clipboard" ;;
+        "current window (copy)") maim -q -d 0.2 -i "$(xdotool getactivewindow)" | ${xclip_cmd} && dunstify -i "photo" -u low -t 2000 "Imagen copiada al clipboard" ;;
+        "full screen (copy)") maim -q -d 0.2 | ${xclip_cmd} && dunstify -i "photo" -u low -t 2000 "Imagen copiada al clipboard" ;;
+    esac
+}
+
+function record() {
+    getdim() { xrandr | sed -n "s/\s*\([0-9]\+x[0-9]\+\).*\*.*/\1/p" ;}
+
+    updateicon() { \
+        echo "$1" > /tmp/recordingicon
+        pkill -RTMIN+9 "${STATUSBAR:-dwmblocks}"
+        }
+
+    killrecording() {
+        recpid="$(cat /tmp/recordingpid)"
+        kill -15 "$recpid"
+        rm -f /tmp/recordingpid
+        updateicon ""
+        pkill -RTMIN+9 "${STATUSBAR:-dwmblocks}"
+        }
+
+    screencast() { \
+        ffmpeg -y \
+        -f x11grab \
+        -framerate 30 \
+        -s "$(getdim)" \
+        -i "$DISPLAY" \
+        -r 24 \
+        -use_wallclock_as_timestamps 1 \
+        -f alsa -thread_queue_size 1024 -i default \
+        -c:v h264 \
+        -crf 0 -preset ultrafast -c:a aac \
+        "$HOME/HDD/Videos/recordings/screencast-$(date '+%y-%m-%d_%H:%M:%S').mp4" &
+        echo $! > /tmp/recordingpid
+        updateicon "⏺️🎙️"
+            }
+
+    video() { ffmpeg \
+        -f x11grab \
+        -framerate 30 \
+        -s "$(getdim)" \
+        -i "$DISPLAY" \
+        -c:v libx264 -qp 0 -r 30 \
+        "$HOME/HDD/Videos/recordings/video-$(date '+%y-%m-%d_%H:%M:%S').mkv" &
+        echo $! > /tmp/recordingpid
+        updateicon "⏺️"
+        }
+
+    webcamhidef() { ffmpeg \
+        -f v4l2 \
+        -i /dev/video0 \
+        -video_size 1920x1080 \
+        "$HOME/HDD/Videos/recordings/webcam-$(date '+%y-%m-%d_%H:%M:%S').mkv" &
+        echo $! > /tmp/recordingpid
+        updateicon "🎥"
+        }
+
+    webcam() { ffmpeg \
+        -f v4l2 \
+        -i /dev/video0 \
+        -video_size 640x480 \
+        "$HOME/HDD/Videos/recordings/webcam-$(date '+%y-%m-%d_%H:%M:%S').mkv" &
+        echo $! > /tmp/recordingpid
+        updateicon "🎥"
+        }
+
+
+    audio() { \
+        ffmpeg \
+        -f alsa -i default \
+        -c:a flac \
+        "$HOME/HDD/Videos/recordings/audio-$(date '+%y-%m-%d_%H:%M:%S').mkv" &
+        echo $! > /tmp/recordingpid
+        updateicon "🎙️"
+        }
+
+    askrecording() { \
+        choice=$(printf "screencast\\nvideo\\nvideo selected\\naudio\\nwebcam\\nwebcam (hi-def)" | dmenu -i -p "Select recording style:")
+        case "$choice" in
+            screencast) screencast;;
+            audio) audio;;
+            video) video;;
+            *selected) videoselected;;
+            webcam) webcam;;
+            "webcam (hi-def)") webcamhidef;;
+        esac
+        }
+
+    asktoend() { \
+        response=$(printf "No\\nYes" | dmenu -i -p "Recording still active. End recording?") &&
+        [ "$response" = "Yes" ] &&  killrecording
+        }
+
+    videoselected()
+    {
+        slop -f "%x %y %w %h" > /tmp/slop
+        read -r X Y W H < /tmp/slop
+        rm /tmp/slop
+
+        ffmpeg \
+        -f x11grab \
+        -framerate 30 \
+        -video_size "$W"x"$H" \
+        -i :0.0+"$X,$Y" \
+        -c:v libx264 -qp 0 -r 30 \
+        "$HOME/HDD/Videos/recordings/box-$(date '+%y-%m-%d_%H:%M:%S').mkv" &
+        echo $! > /tmp/recordingpid
+        updateicon "⏺️"
+    }
+
+    case "$opt" in
+        screencast) screencast;;
+        audio) audio;;
+        video) video;;
+        *selected) videoselected;;
+        kill) killrecording;;
+        *) ([ -f /tmp/recordingpid ] && asktoend && exit) || askrecording;;
+    esac
+}
+
+function show_resources() {
+    df_check_location='/home'
+
+    # Memoria
+    free_output=$(free -h | grep Mem)
+    MEMUSED=$(echo $free_output | awk '{print $3}')
+    MEMTOT=$(echo $free_output | awk '{print $2}')
+
+    # CPU
+    CPU=$(top -bn1 | grep Cpu | awk '{print $2}')%
+    CPUTEMP=$( sensors | grep -m 1 temp1 | awk '{print $2}' )
+
+    # Disco
+    df_output=$(df -h $df_check_location | tail -n 1)
+    DISCUSED=$(echo $df_output | awk '{print $3}')
+    DISCTOT=$(echo $df_output | awk '{print $2}')
+    DISCPER=$(echo $df_output | awk '{print $5}')
+
+    # TODO: Cambiar a solo una notificacion (maybe).
+    notify-send -i "memory" -t 9000 \
+    "MEMORIA: ${MEMUSED}:${MEMTOT}"
+    notify-send -i "cpu" -t 9000 \
+    "CPU: ${CPU}"
+    notify-send -i "temp" -t 9000 \
+    "TEMPERATURA: ${CPUTEMP}"
+    notify-send -i "disk" -t 9000 \
+    "DISCO: ${DISCUSED}:${DISCTOT} -> ${DISCPER}"
+}
+
+function compile() {
+    dir=${file%/*}
+    base="${file%.*}"
+    ext="${file##*.}"
+
+    cd "$dir" || exit 1
+
+    case "$ext" in
+        [0-9]) preconv "$file" | refer -PS -e | groff -mandoc -T pdf > "$base".pdf ;;
+        c) cc "$file" -o "$base" && "$base" ;;
+        cpp) g++ "$file" -o "$base" && "$base" ;;
+        cs) mcs "$file" && mono "$base".exe ;;
+        go) go run "$file" ;;
+        h) sudo make install ;;
+        java) javac -d classes "$file" && java -cp classes "${1%.*}" ;;
+        m) octave "$file" ;;
+        md)	if  [ -x "$(command -v lowdown)" ]; then
+                lowdown --parse-no-intraemph "$file" -Tms | groff -mpdfmark -ms -kept -T pdf > "$base".pdf
+            elif [ -x "$(command -v groffdown)" ]; then
+                groffdown -i "$file" | groff -T pdf > "$base".pdf
+            else
+                pandoc -t ms --highlight-style=kate -s -o "$base".pdf "$file"
+            fi ; ;;
+        mom) preconv "$file" | refer -PS -e | groff -mom -kept -T pdf > "$base".pdf ;;
+        ms) preconv "$file" | refer -PS -e | groff -me -ms -kept -T pdf > "$base".pdf ;;
+        org) emacs "$file" --batch -u "$USER" -f org-latex-export-to-pdf ;;
+        py) python "$file" ;;
+        [rR]md) Rscript -e "rmarkdown::render('$file', quiet=TRUE)" ;;
+        rs) cargo build ;;
+        sass) sassc -a "$file" "$base".css ;;
+        scad) openscad -o "$base".stl "$file" ;;
+        sent) setsid -f sent "$file" 2>/dev/null ;;
+        *) sed -n '/^#!/s/^#!//p; q' "$file" | xargs -r -I % "$file" ;;
+    esac
+}
+
+function lsp_install() { # solo para tenerlo en la mano...
+    username="gerry"
+    lib="/home/$username/.local/lib"
+    cac="/home/$username/.cache"
+    case $lang in
+        javascript|js|typescript|ts) npm install -g typescript typescript-language-server ;;
+        c|cpp|c++|clang|clangd) apt install cmake clang llvm ;;
+        rs|rust) sudo -u "$username" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+            rustup component add rls rust-analysis rust-src ;;
+        html|css) npm i -g vscode-langservers-extracted ;;
+        sass|scss) npm i -g sass ;;
+        svelte) npm install -g svelte-language-server ;;
+        php) paru -S phpactor ;;
+        tailwind) npm install -g @tailwindcss/language-server ;;
+        bash|sh) npm i -g bash-language-server ;;
+        lua) cd "$lib"
+            sudo -u "$username" git clone  --depth=1 https://github.com/sumneko/lua-language-server
+            cd lua-language-server
+            sudo -u "$username" git submodule update --depth 1 --init --recursive
+            cd 3rd/luamake
+            ./compile/install.sh
+            cd ../..
+            ./3rd/luamake/luamake rebuild ;;
+        java) apt install jre-openjdk
+            cd "$lib"; sudo -u "$username" mkdir -p jdt; cd jdt
+            sudo -u "$username" curl -LO https://download.eclipse.org/jdtls/snapshots/jdt-language-server-latest.tar.gz
+            sudo -u "$username" tar -xzvf jdt-language-server-latest.tar.gz
+            cd "$cac"; sudo -u "$username" mkdir -p jdtls ;;
+    esac
+}
+
+function battery() {
+    CHARGE=$(cat /sys/class/power_supply/BAT0/capacity)
+    STATUS=$(cat /sys/class/power_supply/BAT0/status)
+    TIME=600 # en Segundos
+
+    case $bat_opt in
+        status)
+            while true 
+            do
+                if [ "$STATUS" = "Discharging" ]; then
+                    if [[ "$CHARGE" -le 25 ]]; then
+                        notify-send -u critical -i "battery-low" -t 10000 \
+                        "Bateria baja:  $CHARGE%" "Conecte el cargador a su pc"
+                        TIME=300 # 5 min
+                    elif [[ "$CHARGE" -gt 50 ]]; then
+                        TIME=1800 # 30 min
+                    elif [[ "$CHARGE" -gt 80 ]]; then
+                        TIME=3600 # 1h
+                    fi
+                elif [ "$STATUS" = "Charging" ]; then
+                    [ "$CHARGE" -gt 80 ] && \
+                        notify-send -i "battery-charge" -u low -t 5000 \
+                        "Bateria cargada: $CHARGE%" "Favor de desconectar el cargador"
+                        TIME=300
+                fi
+            sleep "$TIME"
+            done
+            ;;
+        charge)
+            if [ ! "$CHARGE" ]; then
+                dunstify -i "battery-not-found" -u low -t 2000 \
+                "No se encontro bateria en el sistema"
+            else
+                dunstify -i "battery-charge" -u low -t 2000 \
+                "Carga de la bateria: $CHARGE%"
+            fi
+            ;;
+    esac
+}
+
+function usb_mount() {
+    #@LukeSmith code
+    getmount() { \
+        [ -z "$chosen" ] && exit 1
+            # shellcheck disable=SC2086
+        mp="$(find $1 2>/dev/null | dmenu -i -p "Type in mount point.")" || exit 1
+        test -z "$mp" && exit 1
+        if [ ! -d "$mp" ]; then
+            mkdiryn=$(printf "No\\nYes" | dmenu -i -p "$mp does not exist. Create it?") || exit 1
+            [ "$mkdiryn" = "Yes" ] && (mkdir -p "$mp" || sudo -A mkdir -p "$mp")
+        fi
+        }
+
+    mountusb() { \
+        chosen="$(echo "$usbdrives" | dmenu -i -p "Mount which drive?")" || exit 1
+        chosen="$(echo "$chosen" | awk '{print $1}')"
+        sudo -A mount "$chosen" 2>/dev/null && notify-send "💻 USB mounting" "$chosen mounted." && exit 0
+        alreadymounted=$(lsblk -nrpo "name,type,mountpoint" | awk '$3!~/\/boot|\/home$|SWAP/&&length($3)>1{printf "-not ( -path *%s -prune ) ",$3}')
+        getmount "/mnt /media /mount /home -maxdepth 5 -type d $alreadymounted"
+        partitiontype="$(lsblk -no "fstype" "$chosen")"
+        case "$partitiontype" in
+            "vfat") sudo -A mount -t vfat "$chosen" "$mp" -o rw,umask=0000;;
+            "exfat") sudo -A mount "$chosen" "$mp" -o uid="$(id -u)",gid="$(id -g)";;
+            *) sudo -A mount "$chosen" "$mp"; user="$(whoami)"; ug="$(groups | awk '{print $1}')"; sudo -A chown "$user":"$ug" "$mp";;
+        esac
+        notify-send "💻 USB mounting" "$chosen mounted to $mp."
+        }
+
+    mountandroid() { \
+        chosen="$(echo "$anddrives" | dmenu -i -p "Which Android device?")" || exit 1
+        chosen="$(echo "$chosen" | cut -d : -f 1)"
+        getmount "$HOME -maxdepth 3 -type d"
+            simple-mtpfs --device "$chosen" "$mp"
+        echo "OK" | dmenu -i -p "Tap Allow on your phone if it asks for permission and then press enter" || exit 1
+        simple-mtpfs --device "$chosen" "$mp"
+        notify-send "🤖 Android Mounting" "Android device mounted to $mp."
+        }
+
+    asktype() { \
+        choice="$(printf "USB\\nAndroid" | dmenu -i -p "Mount a USB drive or Android device?")" || exit 1
+        case $choice in
+            USB) mountusb ;;
+            Android) mountandroid ;;
+        esac
+        }
+
+    anddrives=$(simple-mtpfs -l 2>/dev/null)
+    usbdrives="$(lsblk -rpo "name,type,size,mountpoint" | grep 'part\|rom' | awk '$4==""{printf "%s (%s)\n",$1,$3}')"
+
+    if [ -z "$usbdrives" ]; then
+        [ -z "$anddrives" ] && echo "No USB drive or Android device detected" && exit
+        echo "Android device(s) detected."
+        mountandroid
+    else
+        if [ -z "$anddrives" ]; then
+            echo "USB drive(s) detected."
+            mountusb
+        else
+            echo "Mountable USB drive(s) and Android device(s) detected."
+            asktype
+        fi
+    fi
+}
+
+function usb_umount() {
+    unmountusb() {
+        [ -z "$drives" ] && exit
+        chosen="$(echo "$drives" | dmenu -i -p "Unmount which drive?")" || exit 1
+        chosen="$(echo "$chosen" | awk '{print $1}')"
+        [ -z "$chosen" ] && exit
+        sudo -A umount "$chosen" && notify-send "💻 USB unmounting" "$chosen unmounted."
+        }
+
+    unmountandroid() { \
+        chosen="$(awk '/simple-mtpfs/ {print $2}' /etc/mtab | dmenu -i -p "Unmount which device?")" || exit 1
+        [ -z "$chosen" ] && exit
+        sudo -A umount -l "$chosen" && notify-send "🤖 Android unmounting" "$chosen unmounted."
+        }
+
+    asktype() { \
+        choice="$(printf "USB\\nAndroid" | dmenu -i -p "Unmount a USB drive or Android device?")" || exit 1
+        case "$choice" in
+            USB) unmountusb ;;
+            Android) unmountandroid ;;
+        esac
+        }
+
+    drives=$(lsblk -nrpo "name,type,size,mountpoint,label" | awk -F':' '{gsub(/ /,":")}$4!~/\/boot|\/efi|\/home$|SWAP/&&length($4)>1{printf "%s (%s) %s\n",$4,$3,$5}')
+
+    if ! grep simple-mtpfs /etc/mtab; then
+        [ -z "$drives" ] && echo "No drives to unmount." &&  exit
+        echo "Unmountable USB drive detected."
+        unmountusb
+    else
+        if [ -z "$drives" ]
+        then
+            echo "Unmountable Android device detected."
+                unmountandroid
+        else
+            echo "Unmountable USB drive(s) and Android device(s) detected."
+            asktype
+        fi
+    fi
+}
+
+function change_key() {
+    case $key_opt in
+        maps|rate) xset r rate 300 50;;
+        us) setxkbmap us;;
+        es) setxkbmap es;;
+    esac
+}
+
+function change_vol() {
+    volume=$(pamixer --get-volume)
+
+    send_notification() {
+        RED='\033[0;31m'
+        barra=$(seq --separator="―" 0 "$((volume / 7))" | sed 's/[0-9]//g')
+        paplay ~/.dotfiles/.local/share/sounds/pop.ogg
+        dunstify -i "volume-$STATUS" -a "changevolume" -r 9993 -u bar "  $barra"
+        # dunstify -h int:value:"$volume" "Volumen [%$volume]" -i "volume-$STATUS" -a "changevolume" -r 9993 -u low
+    }
+
+    case $vol_opt in
+    up)
+        pamixer -u
+        pamixer -i 5 --allow-boost
+        STATUS="up"
+        send_notification
+        ;;
+    down)
+        pamixer -u
+        pamixer -d 5 --allow-boost
+        STATUS="down"
+        send_notification
+        ;;
+    mute)
+        pamixer -t
+        if $(pamixer --get-mute); then
+            dunstify -i volume-mute -a "changevolume" -t 2000 -r 9993 -u low "Muted"
+        else
+            check_status
+            send_notification
+        fi
+        ;;
+    esac
+}
+
+function change_brightness() {
+    send_notification() {
+        brightness=$(printf "%.0f" $(xbacklight))
+        barra=$(seq --separator="━" 0 "$((brightness / 5))" | sed 's/[0-9]//g')
+        notify-send -a "changebrightness" -i "brightness" -u low "  $barra"
+    }
+
+    case $bright_opt in
+    up)
+        xbacklight -inc 10
+        send_notification $1
+        ;;
+    down)
+        xbacklight -dec 10
+        send_notification $1
+        ;;
+    esac
+}
+
+case $1 in
+    --walls) new_wall="$2" change_wall ;;
+    --emoji) opt="$2" select_emoji ;;
+    --power) power_opts ;;
+    --res) show_resources ;;
+    --usb) case $2 in
+            m*) usb_mount ;;
+            u*) usb_umount ;;
+           esac ;;
+    --screen) case "$2" in
+                a) xrandr --output HDMI-0 --right-of DP-1 ;;
+                s) xrandr --output DP-1 --primary --mode 1920x1080 --rate 144 ;;
+            esac
+            awt --walls ;;
+    --display) select_display ;;
+    --record) opt="$2" record ;;
+    --comp*) file=$(readlink -f "$2") compile ;;
+    --lsp) lang="$2" lsp_install ;;
+    --maim|--screenshot|--captura) screenshot ;;
+    --bat*) bat_opt="$2" battery ;;
+    --keys) key_opt="$2" change_key ;;
+    --bright*) bright_opt="$2" change_brightness ;;
+    --volume) vol_opt="$2" change_vol ;;
+esac
