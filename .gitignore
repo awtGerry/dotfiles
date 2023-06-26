@@ -27,6 +27,7 @@ Downloads
 .config/Thunar
 .config/xfce4
 .config/viewnior
+.config/zsh/plugins
 
 .local/lib
 .local/share
