@@ -26,7 +26,7 @@ local taglist = function(s)
 
     local mytaglist = awful.widget.taglist {
         screen  = s,
-        filter  = awful.widget.taglist.filter.all,
+        filter = function (t) return t.selected or #t:clients() > 0 end,
         style = {shape = gears.shape.circle},
         layout = {
             spacing = 1,
