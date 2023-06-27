@@ -4,33 +4,34 @@ local awful = require("awful")
 volume_widget = wibox.widget.textbox()
 volume_widget:set_align("right")
 
-function update_volume(widget)
-    local fd = io.popen("amixer sget Master")
-    local status = fd:read("*all")
-    fd:close()
+local function update_volume(widget)
+    local volume = io.popen("pamixer --get-volume")
+    local volume_level = volume:read("*all")
+    volume:close()
 
-    local volume = string.match(status, "(%d?%d?%d)%%")
-    volume = string.format("% 3d", volume)
+    local volume_status = io.popen("pamixer --get-mute")
+    local volume_mute = volume_status:read("*all")
+    volume_status:close()
 
-    status = string.match(status, "%[(o[^%]]*)%]")
+    volume_level = string.format("% 3d", volume_level)
 
-    if string.find(status, "on", 1, true) then
-        if tonumber(volume) >= 0 and tonumber(volume) < 25 then
-            volume = "󰕿 " .. volume .. "%"
-        elseif tonumber(volume) >= 25 and tonumber(volume) < 50 then
-            volume = "󰖀 " .. volume .. "%"
-        elseif tonumber(volume) >= 50 then
-            volume = " " .. volume .. "%"
+
+    if string.find(volume_mute, "false") then
+        if tonumber(volume_level) >= 0 and tonumber(volume_level) < 25 then
+            volume_level = "󰕿 " .. volume_level .. "%"
+        elseif tonumber(volume_level) >= 25 and tonumber(volume_level) < 50 then
+            volume_level = "󰖀 " .. volume_level .. "%"
+        elseif tonumber(volume_level) >= 50 then
+            volume_level = "  " .. volume_level .. "%"
         end
-
     else
-        volume = "󰖁"
+        volume_level = "󰖁 "
     end
-    widget:set_markup(volume)
+    widget:set_markup(volume_level)
 end
 
 update_volume(volume_widget)
 
-mytimer = timer({ timeout = 0.2 })
+local mytimer = timer({ timeout = 1 })
 mytimer:connect_signal("timeout", function () update_volume(volume_widget) end)
 mytimer:start()

@@ -7,6 +7,7 @@ local logo = require("lua.awt.bar.logo")
 local tags = require("lua.awt.bar.tags")
 local clock = require("lua.awt.bar.clock")
 local volume = require("lua.awt.bar.volume")
+local resources = require("lua.awt.bar.resources")
 space:set_text("  ")
 space2:set_text("       ")
 
@@ -22,12 +23,11 @@ local bar = function(s)
         {
             {
                 layout = wibox.layout.align.horizontal,
+                logo,
                 {
                     layout = wibox.layout.align.horizontal,
-                    logo,
                     tags(s),
                 },
-                nil,
                 {
                     layout = wibox.layout.align.horizontal,
                     {
@@ -49,7 +49,7 @@ local bar = function(s)
         {
             layout = wibox.container.place,
             halign = "center",
-            clock
+            res
         },
         layout = wibox.layout.stack,
     }
