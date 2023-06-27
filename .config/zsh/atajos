@@ -12,6 +12,7 @@ ppw="cd $HOME/Pictures/walls && ls" \
 vv="cd $HOME/Videos && ls" \
 rr="cd $HOME/.local/bin && ls" \
 sc="cd $HOME/.local/share && ls" \
+aw="cd $HOME/.config/awesome && ls -a" \
 cf="cd $HOME/.config && ls -a" \
 cfa="$EDITOR $HOME/.config/zsh/alias" \
 cfd="$EDITOR $HOME/.config/zsh/atajos" \

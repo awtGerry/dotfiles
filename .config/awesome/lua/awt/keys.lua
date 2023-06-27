@@ -49,7 +49,7 @@ awful.keyboard.append_global_keybindings({
         {modkey, "Shift"}, "m", function () awful.spawn(usr_default.TERMINAL .. " -e pulsemixer") end,
         {description = "abre manejador de audio", group = "programas"}),
     awful.key(
-        {modkey}, "BackSpace", function () awful.spawn("wlogout") end,
+        {modkey}, "BackSpace", function () awful.spawn("wlogout -p layer-shell") end,
         {description = "abre logout menu", group = "programas"}),
 })
 
