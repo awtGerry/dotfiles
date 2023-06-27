@@ -25,6 +25,7 @@ alias \
 alias \
     dh="sudo cp config.def.h config.h" \
     sy="awt --screen a && awt --screen s && exit" \
+    matrix="unimatrix -n -s 96 -l o -c magenta" \
     langi="sudo sh $HOME/.dotfiles/.local/bin/awtlsp" \
     mci="sudo make clean install"
 

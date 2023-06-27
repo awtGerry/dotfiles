@@ -31,8 +31,8 @@ opt.ignorecase = true
 opt.smartcase = true
 
 -- Mouse
-opt.mouse = "nv"
--- opt.mouse = ""
+-- opt.mouse = "nv"
+opt.mouse = ""
 
 -- Tabular
 opt.tabstop = 4

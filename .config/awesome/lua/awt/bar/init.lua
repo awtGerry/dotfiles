@@ -20,7 +20,7 @@ local bar = function(s)
         height = 34,
         screen = s,
         fg = "#f5c2e7",
-        bg = "#1e1e2e"
+        bg = beautiful.bg_normal
     }
     wbar:setup {
         {
