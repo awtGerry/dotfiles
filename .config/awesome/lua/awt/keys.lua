@@ -5,7 +5,7 @@ local menubar = require("menubar")
 local rofi = "rofi -show drun -theme ~/.config/rofi/config.rasi"
 
 awful.mouse.append_global_mousebindings({
-    awful.button({ }, 3, function () mymainmenu:toggle() end),
+    awful.button({ }, 3, function () awful.spawn(rofi) end),
     awful.button({ }, 4, awful.tag.viewprev),
     awful.button({ }, 5, awful.tag.viewnext),
 })

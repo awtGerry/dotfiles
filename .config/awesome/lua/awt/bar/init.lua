@@ -1,5 +1,7 @@
 local awful = require("awful")
 local wibox = require("wibox")
+local beautiful = require("beautiful")
+
 local space = wibox.widget.textbox()
 local space2 = wibox.widget.textbox()
 
@@ -8,6 +10,7 @@ local tags = require("lua.awt.bar.tags")
 local clock = require("lua.awt.bar.clock")
 local volume = require("lua.awt.bar.volume")
 local resources = require("lua.awt.bar.resources")
+local network = require("lua.awt.bar.network")
 space:set_text("  ")
 space2:set_text("       ")
 
@@ -32,9 +35,11 @@ local bar = function(s)
                     layout = wibox.layout.align.horizontal,
                     {
                         layout = wibox.layout.align.horizontal,
-                        volume_widget,
+                        network,
                         space2,
+                        volume_widget,
                     },
+                    space2,
                     {
                         layout = wibox.layout.align.horizontal,
                         clock,

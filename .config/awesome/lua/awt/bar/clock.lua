@@ -1,7 +1,7 @@
 local wibox = require("wibox")
 
 local clock = wibox.widget {
-        format = " %H:%M",
+        format = "<b>  %H:%M</b>",
         widget = wibox.widget.textclock,
 }
 

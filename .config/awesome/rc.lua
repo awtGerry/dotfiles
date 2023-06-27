@@ -4,6 +4,7 @@ pcall(require, "luarocks.loader")
 
 -- Librerias
 local awful = require("awful")
+local beautiful = require("beautiful")
 require("awful.autofocus")
 require("awful.hotkeys_popup.keys")
 

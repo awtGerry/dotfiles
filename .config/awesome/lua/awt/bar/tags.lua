@@ -28,23 +28,28 @@ local taglist = function(s)
         screen  = s,
         filter = function (t) return t.selected or #t:clients() > 0 end,
         style = {shape = gears.shape.circle},
-        layout = {
-            spacing = 1,
-            layout = wibox.layout.flex.horizontal
-        },
-        buttons = taglist_buttons,
+        layout = {spacing = dpi(10), layout = wibox.layout.fixed.horizontal},
+        -- buttons = taglist_buttons,
         widget_template = {
             {
                 {
-                    id     = 'text_role',
-                    widget = wibox.widget.textbox,
+                    {
+                        id     = 'text_role',
+                        widget = wibox.widget.textbox,
+                        -- font = beautiful.font_var .. "10",
+                        align = "center",
+                        markup = "DD",
+                        valign = "center",
+                    },
+                    margins = dpi(8),
+                    widget  = wibox.container.margin
                 },
-                margins = 4,
-                widget  = wibox.container.margin
+                widget = wibox.container.background
             },
+            id = "background_role",
+            bg = beautiful.accent,
             widget = wibox.container.background,
-            shape = gears.shape.circle,
-            id    = 'background_role',
+
             create_callback = function(self, _, _, _)
                 self:connect_signal('mouse::enter', function()
                     if self.bg ~= beautiful.bg_accent then
@@ -57,6 +62,7 @@ local taglist = function(s)
                     if self.has_backup then self.bg = self.backup end
                 end)
             end,
+
             update_callback = function(self, c3, _)
                 -- Prevent the bug where there is on tag with a background because the mouse was on the tag before the user switched to it
                 if c3.selected then
@@ -65,7 +71,8 @@ local taglist = function(s)
                     self.backup = beautiful.bg_normal
                 end
             end
-        }
+        },
+        buttons = taglist_buttons,
     }
     return mytaglist
 end
