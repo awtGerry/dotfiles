@@ -29,5 +29,5 @@ require "lua.awt.error"
 local bar = require "lua.awt.bar"
 awful.screen.connect_for_each_screen(function (s)
     bar(s)
-    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])
+    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[2])
 end)

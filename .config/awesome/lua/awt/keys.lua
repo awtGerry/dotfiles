@@ -48,6 +48,9 @@ awful.keyboard.append_global_keybindings({
     awful.key(
         {modkey, "Shift"}, "m", function () awful.spawn(usr_default.TERMINAL .. " -e pulsemixer") end,
         {description = "abre manejador de audio", group = "programas"}),
+    awful.key(
+        {modkey}, "BackSpace", function () awful.spawn("wlogout") end,
+        {description = "abre logout menu", group = "programas"}),
 })
 
 -- Multimedia
@@ -235,5 +238,12 @@ client.connect_signal("request::default_keybindings", function()
         awful.key(
             {modkey}, "t", function (c) c.ontop = not c.ontop end,
             {description = "toggle keep on top", group = "client"}),
+        awful.key(
+            {modkey}, "n", function (c) c.minimized = true end,
+            {description = "minimize", group = "client"}),
+        awful.key(
+            {modkey}, "m", function (c) c.maximized = not c.maximized c:raise() end,
+            {description = "(un)maximize", group = "client"}),
+
     })
 end)

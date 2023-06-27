@@ -20,7 +20,7 @@ opt.equalalways = false
 opt.splitright = true
 opt.splitbelow = true
 
--- opt.clipboard = "unnamedplus"
+opt.clipboard = "unnamedplus"
 opt.hidden = true -- Buffers siempre abiertos (usa + RAM).
 opt.shortmess = opt.shortmess + "c"
 

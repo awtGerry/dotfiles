@@ -17,10 +17,10 @@ space2:set_text("       ")
 local bar = function(s)
     local wbar = awful.wibar {
         position = "top",
-        height = 34,
+        -- height = 34,
         screen = s,
-        fg = "#f5c2e7",
-        bg = beautiful.bg_normal
+        fg = beautiful.pink,
+        bg = beautiful.bg_color
     }
     wbar:setup {
         {
