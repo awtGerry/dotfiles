@@ -10,7 +10,7 @@ local colors = require("lua.awt.themes.colors.mocha")
 local theme = {}
 
 -- Definir fuente
-theme.font = "JetBrainsMono Nerd Font 14"
+theme.font = "JetBrainsMono 14"
 
 -- Definir colores
 theme.fg_color      = colors.fg_color
@@ -38,10 +38,9 @@ theme.border_focus = colors.pink
 -- theme.images = require("images")
 
 -- theme.notification_icon             = theme.images.bell
-theme.notification_font             = theme.font .. "12"
+-- theme.notification_font             = theme.font .. "12"
 theme.notification_spacing          = dpi(theme.useless_gap)
 -- theme.notification_border_radius    = dpi(theme.rounded)
 theme.notification_border_width     = dpi(0)
 
--- beautiful.init();
 beautiful.init(theme)

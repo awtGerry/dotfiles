@@ -10,9 +10,10 @@ local tags = require("lua.awt.bar.tags")
 local clock = require("lua.awt.bar.clock")
 local volume = require("lua.awt.bar.volume")
 local resources = require("lua.awt.bar.resources")
+local battery = require("lua.awt.bar.battery")
 local network = require("lua.awt.bar.network")
-space:set_text("  ")
-space2:set_text("       ")
+space:set_text(" ")
+space2:set_text("   ")
 
 local bar = function(s)
     local wbar = awful.wibar {
@@ -37,13 +38,14 @@ local bar = function(s)
                         layout = wibox.layout.align.horizontal,
                         network,
                         space2,
-                        volume_widget,
+                        battery_widget,
                     },
                     space2,
                     {
                         layout = wibox.layout.align.horizontal,
+                        volume_widget,
+                        space2,
                         clock,
-                        space,
                     },
                 }
             },
