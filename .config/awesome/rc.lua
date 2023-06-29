@@ -8,6 +8,8 @@ local beautiful = require("beautiful")
 require("awful.autofocus")
 require("awful.hotkeys_popup.keys")
 
+awful.spawn.with_shell("~/.config/awesome/autostart.sh")
+
 -- Modkey (Mod4 es tecla de Windows)
 modkey = "Mod4"
 
@@ -20,7 +22,7 @@ usr_default = {
     MUSIC = "spotify",
 }
 
-require "lua.awt.configs"
+-- require "lua.awt.configs"
 require "lua.awt.keys"
 require "lua.awt.themes"
 require "lua.awt.error"

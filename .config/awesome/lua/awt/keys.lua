@@ -74,19 +74,19 @@ awful.keyboard.append_global_keybindings({
 
 
     awful.key({}, "XF86AudioRaiseVolume",
-        function() awful.spawn("amixer -D pulse set Master 5%+", false)
+        function() awful.spawn("pamixer -i 5 --allow-boost", false)
     end,
     {description = "increase volume", group = "control"}),
 
 
     awful.key({}, "XF86AudioLowerVolume",
-        function() awful.spawn("amixer -D pulse set Master 5%-", false)
+        function() awful.spawn("pamixer -d 5 --allow-boost", false)
     end,
     {description = "decrease volume", group = "control"}),
 
 
     awful.key({}, "XF86AudioMute", function() 
-        awful.spawn("amixer -D pulse set Master 1+ toggle", false)
+        awful.spawn("pamixer -t", false)
     end,
     {description = "mute volume", group = "control"}),
 
