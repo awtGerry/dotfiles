@@ -6,7 +6,6 @@ local function font_with_fallback(name, params)
 end
 
 local font_name = "FiraCodeNerdFont"
--- () => * 0O
 
 return {
 	front_end = "OpenGL",
@@ -30,7 +29,7 @@ return {
 		},
 	},
 	warn_about_missing_glyphs = false,
-	font_size = 19,
+	font_size = 14,
 	line_height = 1.0,
 	dpi = 96.0,
 

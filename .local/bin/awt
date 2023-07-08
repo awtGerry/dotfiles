@@ -92,16 +92,17 @@ function select_display() {
 }
 
 function screenshot() {
-    output="$(date '+%y%m%d-%H%M-%S').png"
+    output="$(date '+%Y-%m-%d_%H:%M-%S').png"
     xclip_cmd="xclip -sel clip -t image/png"
     path="/home/gerry/Pictures/screenshots"
-    case "$(printf "a selected area\\ncurrent window\\nfull screen\\na selected area (copy)\\ncurrent window (copy)\\nfull screen (copy)" | dmenu -l 6 -i -p "Screenshot which area?")" in
-        "a selected area") maim -s "$path"/selected/pic-selected-"${output}" && dunstify -i "photo" -u low -t 2000 "Imagen guardada en galeria" ;;
-        "current window") maim -q -d 0.2 -i "$(xdotool getactivewindow)" "$path"/window/pic-window-"${output}" && dunstify -i "photo" -u low -t 2000 "Imagen guardada en galeria" ;;
-        "full screen") maim -q -d 0.2 "$path"/full/pic-full-"${output}" && dunstify -i "photo" -u low -t 2000 "Imagen guardada en galeria" ;;
-        "a selected area (copy)") maim -s | ${xclip_cmd} && dunstify -i "photo" -u low -t 2000 "Imagen copiada al clipboard" ;;
-        "current window (copy)") maim -q -d 0.2 -i "$(xdotool getactivewindow)" | ${xclip_cmd} && dunstify -i "photo" -u low -t 2000 "Imagen copiada al clipboard" ;;
-        "full screen (copy)") maim -q -d 0.2 | ${xclip_cmd} && dunstify -i "photo" -u low -t 2000 "Imagen copiada al clipboard" ;;
+
+    case "$(printf "✂️ Seleccionar area\\n🪟 Ventana\\n📷 Toda la pantalla\\n✂️ Seleccionar area (copia)\\n🪟 Ventana (copia)\\n📷 Toda la pantalla (copia)" | rofi -dmenu)" in
+        "✂️ Seleccionar area") maim -s "$path"/select/screenshot"${output}" ;;
+        "🪟 Ventana") maim -q -d 0.2 -i "$(xdotool getactivewindow)" "$path"/window/screenshot"${output}" ;;
+        "📷 Toda la pantalla") maim -q -d 0.2 "$path"/full/screenshot"${output}" ;;
+        "✂️ Seleccionar area (copia)") maim -s | $xclip_cmd && notify-send "Screenshot" "Copia de pantalla seleccionada" ;;
+        "🪟 Ventana (copia)") maim -q -d 0.2 -i "$(xdotool getactivewindow)" | $xclip_cmd && notify-send "Screenshot" "Copia de ventana" ;;
+        "📷 Toda la pantalla (copia)") maim -q -d 0.2 | $xclip_cmd && notify-send "Screenshot" "Copia de pantalla completa" ;;
     esac
 }
 

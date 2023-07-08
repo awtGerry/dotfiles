@@ -51,26 +51,28 @@ awful.keyboard.append_global_keybindings({
     awful.key(
         {modkey}, "BackSpace", function () awful.spawn("wlogout -p layer-shell") end,
         {description = "abre logout menu", group = "programas"}),
+    awful.key(
+        {modkey}, "Print", function() awful.util.spawn("/home/gerry/.local/bin/awt --maim") end,
+        {description = "screenshot", group = "control"}),
 })
 
 -- Multimedia
 awful.keyboard.append_global_keybindings({
-    awful.key({}, "XF86MonBrightnessUp",  function() 
-        awful.spawn("brightnessctl set 5%+ -q", false) 
+    awful.key({}, "XF86MonBrightnessUp",  function()
+        awful.spawn("brightnessctl set 5%+ -q", false)
     end,
     {description = "increase brightness", group = "control"}),
 
 
     awful.key({}, "XF86MonBrightnessDown", function()
-        awful.spawn("brightnessctl set 5%- -q", false) 
+        awful.spawn("brightnessctl set 5%- -q", false)
     end,
     {description = "decrease brightness", group = "control"}),
 
 
-    awful.key({}, "Print", function() 
-        awful.util.spawn(home_var .. "/.scripts/ss area", false)
-    end,
-    {description = "screenshot", group = "control"}),
+    awful.key(
+        {}, "Print", function() awful.util.spawn("maim -q -d 0.2 /home/gerry/Pictures/screenshots/full/screenshot") end,
+        {description = "screenshot", group = "control"}),
 
 
     awful.key({}, "XF86AudioRaiseVolume",

@@ -4,3 +4,7 @@
 </div>
 
 [Instalar](https://github.com/awtgerry/install-aw)
+
+```sh
+git clone --recursive https://github.com/awtgerry/dotfiles.git
+```

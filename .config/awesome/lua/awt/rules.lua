@@ -60,4 +60,13 @@ ruled.client.connect_signal("request::rules", function()
         rule       = { class = "Spotify"     },
         properties = { screen = 1, tag = "9" }
     }
+
+    ruled.client.append_rule {
+        rule       = { class = "Wormhole"     },
+        properties = { screen = 1, tag = "3" }
+    }
+    ruled.client.append_rule {
+        rule       = { class = "wormhole"     },
+        properties = { screen = 1, tag = "3" }
+    }
 end)
