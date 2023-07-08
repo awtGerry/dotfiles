@@ -1,13 +1,34 @@
-require'nvim-treesitter.configs'.setup {
-    -- ensure_installed = { "help", "javascript", "typescript", "c", "rust" },
-    sync_install = false,
-    auto_install = true,
-    autotag = {
-        enable = true,
+if not pcall(require, "nvim-treesitter") then
+    print("Treesitter is not installed")
+    return
+end
+
+local tree = require("nvim-treesitter.configs").setup {
+    ensure_installed = {
+        "bash",
+        "c",
+        "cpp",
+        "go",
+        "html",
+        "javascript",
+        "json",
+        "lua",
+        "markdown",
+        "rust",
+        "tsx",
+        "typescript",
+        "vim"
     },
+
     highlight = {
         enable = true,
-        -- disable = { "latex" },
-        additional_vim_regex_highlighting = false,
     },
+
+    autotag = {
+        enable = true,
+    }
+}
+
+require("treesitter-context").setup {
+    enable = true
 }

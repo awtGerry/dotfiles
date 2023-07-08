@@ -1,3 +1,7 @@
+if not pcall(require, "telescope") then
+  return
+end
+
 local actions = require "telescope.actions"
 local action_state = require "telescope.actions.state"
 
@@ -9,6 +13,7 @@ local set_prompt_to_entry_value = function(prompt_bufnr)
 
   action_state.get_current_picker(prompt_bufnr):reset_prompt(entry.ordinal)
 end
+
 require('telescope').setup {
   defaults = {
     prompt_prefix = "> ",
@@ -117,5 +122,9 @@ require('telescope').setup {
       trace_entry = true,
       reset_selection = true,
     },
+    ["ui-select"] = {
+      require("telescope.themes").get_dropdown {},
+    },
   },
+    _ = require("telescope").load_extension "ui-select"
 }

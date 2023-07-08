@@ -24,12 +24,11 @@ function M.fd()
 end
 
 -- Neovim
-
 function M.edit_neovim()
   local opts_with_preview, opts_without_preview
 
   opts_with_preview = {
-    prompt_title = "~ Neovim ~",
+    prompt_title = "~ Neovim files ~",
     shorten_path = false,
     follow = true,
     cwd = "~/.config/nvim",
@@ -81,69 +80,11 @@ function M.vim_options()
   }
 end
 
--- ZSH ~ DWM
-
-function M.edit_zsh()
-  local width = 0.25
-
-  local opts = themes.get_dropdown {
-    winblend = 6,
-    previewer = false,
-    shorten_path = false,
-    prompt_title = "~ ZSH ~",
-    cwd = "~/.dotfiles/.config/zsh",
-
-    follow = true,
-
-    layout_config = {
-      width = width,
-    },
-  }
-
-  require("telescope.builtin").find_files(opts)
-end
-
-function M.edit_dwm()
-  local width = 0.50
-  local opts = themes.get_dropdown {
-    cwd = "~/.dotfiles/.config/suckless/",
-    prompt_title = "~ DWM ~",
-
-    previewer = false,
-    shorten_path = false,
-    hidden = false,
-    follow = true,
-
-    layout_strategy = "horizontal",
-    layout_config = {
-        width = width,
-    },
-  }
-  require("telescope.builtin").find_files(opts)
-end
-
--- Personal
-
-function M.awesometimes()
-  tele_find {
-    prompt_title = "🤍 AWESOMETIMES 🖤",
-    shorten_path = false,
-    cwd = "~/awesometimes/",
-    hidden = false,
-
-    layout_strategy = "horizontal",
-    layout_config = {
-      width = 0.75,
-      preview_width = 0.65,
-    },
-  }
-end
-
 function M.projects()
     tele_find {
         shorten_path = false,
-        cwd = "~/awesometimes/projects/",
-        prompt = "~ DREAMS ~",
+        cwd = "~/projects/",
+        prompt = "~ VS* sucks ~",
         hidden = true,
 
         layout_strategy = "horizontal",
@@ -151,26 +92,6 @@ function M.projects()
             preview_width = 0.55,
         },
     }
-end
-
-function M.escuela()
-  local width = 0.50
-
-  local opts = themes.get_dropdown {
-    winblend = 10,
-    previewer = false,
-    shorten_path = false,
-    hidden = true,
-
-    cwd = "~/Documents/ceti/",
-    prompt = "~  龎 ~",
-
-    layout_config = {
-      width = width,
-    },
-  }
-
-  tele_find(opts)
 end
 
 -- GIT
@@ -215,7 +136,6 @@ function M.git_commits()
 end
 
 -- Strings
-
 function M.live_grep()
   require("telescope.builtin").live_grep {
     shorten_path = true,
@@ -295,6 +215,10 @@ function M.buffers()
   }
 end
 
+function M.colorscheme()
+    require("telescope.builtin").colorscheme {}
+end
+
 function M.all_files()
   tele_find {
     find_command = { "rg", "--no-ignore", "--files" },
@@ -307,7 +231,7 @@ local function set_xwallpaper(content)
         "awt --walls \"" .. content .. "\"")
 end
 
-local function fun_walls(prompt_bufnr, map)
+local function tele_walls(prompt_bufnr, map)
     local function cambiar_fondo(close)
         local content =
         require('telescope.actions.state').get_selected_entry(prompt_bufnr)
@@ -326,7 +250,7 @@ local function fun_walls(prompt_bufnr, map)
     end)
 end
 
-local function selec_imagen(prompt, cwd)
+local function select_wall(prompt, cwd)
     return function()
         require("telescope.builtin").find_files({
             theme = "dropdown",
@@ -339,13 +263,13 @@ local function selec_imagen(prompt, cwd)
                 width = 70,
             },
             attach_mappings = function(prompt_bufnr, map)
-                fun_walls(prompt_bufnr, map)
+                tele_walls(prompt_bufnr, map)
                 return true
             end
         })
     end
 end
 
-M.wallpaper_selector = selec_imagen(" ~ 💜 ~ ", "~/Pictures/walls")
+M.walls = select_wall(" ~ Wallpapers ~ ", "~/Pictures/wallpapers")
 
 return M

@@ -1,216 +1,298 @@
+if not pcall(require, "luasnip") then
+  return
+end
+
+local make = require ("furry.snips").make
+
 local ls = require "luasnip"
 local types = require "luasnip.util.types"
 
-local fmt = require("luasnip.extras.fmt").fmt
-local rep = require("luasnip.extras").rep
-
-local s = ls.snippet
-local ps = ls.parser.parse_snippet
-local sn = ls.snippet_node
-local t = ls.text_node
-local i = ls.insert_node
-local f = ls.function_node
-local c = ls.choice_node
-local d = ls.dynamic_node
-local r = ls.restore_node
-
 ls.config.set_config {
-  history = true,
-  hidden = true,
+  -- This tells LuaSnip to remember to keep around the last snippet.
+  -- You can jump back into it even if you move outside of the selection
+  history = false,
 
+  -- This one is cool cause if you have dynamic snippets, it updates as you type!
   updateevents = "TextChanged,TextChangedI",
+
+  -- Autosnippets:
   enable_autosnippets = true,
 
+  -- Crazy highlights!!
+  -- #vid3
+  -- ext_opts = nil,
   ext_opts = {
     [types.choiceNode] = {
       active = {
-        virt_text = { { "<-", "Error" } },
+        virt_text = { { " « ", "NonTest" } },
       },
     },
   },
 }
 
-ls.add_snippets("all", {
-  ps("user", USERNAME),
-  s("date", f(function()
-    return os.date "%D"
-    end)
-  ),
-  ps ("for", "for ($1 i=$2; i$3; i++) {\n\t$0\n}"),
+-- create snippet
+-- s(context, nodes, condition, ...)
+local snippet = ls.s
+
+-- TODO: Write about this.
+--  Useful for dynamic nodes and choice nodes
+local snippet_from_nodes = ls.sn
+
+-- This is the simplest node.
+--  Creates a new text node. Places cursor after node by default.
+--  t { "this will be inserted" }
+--
+--  Multiple lines are by passing a table of strings.
+--  t { "line 1", "line 2" }
+local t = ls.text_node
+
+-- Insert Node
+--  Creates a location for the cursor to jump to.
+--      Possible options to jump to are 1 - N
+--      If you use 0, that's the final place to jump to.
+--
+--  To create placeholder text, pass it as the second argument
+--      i(2, "this is placeholder text")
+local i = ls.insert_node
+
+-- Function Node
+--  Takes a function that returns text
+local f = ls.function_node
+
+-- This a choice snippet. You can move through with <c-l> (in my config)
+--   c(1, { t {"hello"}, t {"world"}, }),
+--
+-- The first argument is the jump position
+-- The second argument is a table of possible nodes.
+--  Note, one thing that's nice is you don't have to include
+--  the jump position for nodes that normally require one (can be nil)
+local c = ls.choice_node
+
+local d = ls.dynamic_node
+
+-- TODO: Document what I've learned about lambda
+local l = require("luasnip.extras").lambda
+
+local events = require "luasnip.util.events"
+
+-- local str_snip = function(trig, expanded)
+--   return ls.parser.parse_snippet({ trig = trig }, expanded)
+-- end
+
+local same = function(index)
+  return f(function(args)
+    return args[1]
+  end, { index })
+end
+
+local toexpand_count = 0
+
+-- `all` key means for all filetypes.
+-- Shared between all filetypes. Has lower priority than a particular ft tho
+-- snippets.all = {
+ls.add_snippets(nil, {
+  -- basic, don't need to know anything else
+  --    arg 1: string
+  --    arg 2: a node
+  snippet("simple", t "wow, you were right!"),
+
+  -- callbacks table
+  snippet("toexpand", c(1, { t "hello", t "world", t "last" }), {
+    callbacks = {
+      [1] = {
+        [events.enter] = function(--[[ node ]])
+          toexpand_count = toexpand_count + 1
+          print("Number of times entered:", toexpand_count)
+        end,
+      },
+    },
+  }),
+
+  -- regTrig
+  --    snippet.captures
+  -- snippet({ trig = "AbstractGenerator.*Factory", regTrig = true }, { t "yo" }),
+
+  -- third arg,
+  snippet("never_expands", t "this will never expand, condition is false", {
+    condition = function()
+      return false
+    end,
+  }),
+
+  -- docTrig ??
+
+  -- functions
+
+  -- date -> Tue 16 Nov 2021 09:43:49 AM EST
+  snippet({ trig = "date" }, {
+    f(function()
+      return string.format(string.gsub(vim.bo.commentstring, "%%s", " %%s"), os.date())
+    end, {}),
+  }),
+
+  -- Simple snippet, basics
+  snippet("for", {
+    t "for ",
+    i(1, "k, v"),
+    t " in ",
+    i(2, "ipairs()"),
+    t { "do", "  " },
+    i(0),
+    t { "", "" },
+    t "end",
+  }),
+
+  --[[
+        -- Alternative printf-like notation for defining snippets. It uses format
+        -- string with placeholders similar to the ones used with Python's .format().
+        s(
+            "fmt1",
+            fmt("To {title} {} {}.", {
+                i(2, "Name"),
+                i(3, "Surname"),
+                title = c(1, { t("Mr."), t("Ms.") }),
+            })
+        ),
+  --]]
+
+  -- LSP version (this allows for simple snippets / copy-paste from vs code things)
+
+  -- function(args, snip) ... end
+
+  -- Using captured text <-- think of a fun way to use this.
+  -- s({trig = "b(%d)", regTrig = true},
+  -- f(function(args, snip) return
+  -- "Captured Text: " .. snip.captures[1] .. "." end, {})
+
+  -- the first few letters of a commit hash -> expand to correct one
+  -- type the first few words of a commit message -> expands to commit hash that matches
+  -- commit:Fixes #
+
+  -- tree sitter
+  -- :func:x -> find all functions in the file with x in the name, and choice between them
+
+  -- auto-insert markdown footer?
+  -- footer:(hello world)
+  -- ^link
+  -- callbacks [event.leave]
+
+  --
+  -- ls.parser.parse_snippet({trig = "lsp"}, "$1 is ${2|hard,easy,challenging|}")
 })
 
-ls.add_snippets("javascript", {
-  ps("cs", "console.log($1)$0")
-})
+-- table.insert(
+--   snippets.all,
+--   snippet("cond", {
+--     t "will only expand in c-style comments",
+--   }, {
+--     condition = function(
+--       line_to_cursor --[[ , matched_trigger, captures ]]
+--     )
+--       local commentstring = "%s*" .. vim.bo.commentstring:gsub("%%s", "")
+--       -- optional whitespace followed by //
+--       return line_to_cursor:match(commentstring)
+--     end,
+--   })
+-- )
 
-ls.add_snippets("lua", {
-    ps("lf", "local $1 = function($2)\n $0\nend"),
-    s("req", fmt("local {} = require('{}')", { i(1, "default"), rep(1) })),
-})
+-- Make sure to not pass an invalid command, as io.popen() may write over nvim-text.
+ls.add_snippets(nil, {
+  snippet(
+    { trig = "$$ (.*)", regTrig = true },
+    f(function(_, snip, command)
+      if snip.captures[1] then
+        command = snip.captures[1]
+      end
 
-ls.add_snippets("cpp", {
-    ps("cpp", "#include<iostream>\nusing namespace std;\n\nint main() {\n\t$1\n\treturn 0;\n}$0"),
-    ps("ios", "#include<iostream>\n$0"),
-    ps("cout", 'cout<<$1<<endl;$0'),
-    ps("scout", 'std::cout<<$1<<std::endl;$0'),
-    ps("class", '\nclass $1 {\n};\n'),
-    ps("main", "int main() {\n\t$1\n\treturn 0;\n}$0"),
-})
-
-ls.add_snippets("java", {
-    ps("class", "public class $1 {\n}"),
-    ps("main", "public static void main(String[] args) {\n\t$0\n}"),
-    ps("set", "public void set$1($2) { this.$3=$3; }$0"),
-    -- s(
-    --   "set", "public void set$1($2) { this.$3=$0; }"
-    -- ),
-    ps("get", "public $1 get$2() { return $3; }$0"),
-    ps("sout", "System.out.println($0);"),
-    ps("sin", "Scanner in = new Scanner(System.in)"),
-    ps("creset", 'private static String RESET = "\\u001B[30m";'),
-    ps("cred", 'private static String ROJO = "\\u001B[31m";'),
-    ps("cgreen", 'private static String VERDE = "\\u001B[32m";'),
-    ps("cblue", 'private static String AZUL = "\\u001B[36m";'),
-
-    ps("grouplayout", [[
-        // Horizontal layout
-        ly.setHorizontalGroup(
-            ly.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(ly.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(ly.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    // start components
-                    .addGroup(ly.createSequentialGroup()
-                    )
-                )
-            )
-        );
-        // Vertical layout
-        ly.setVerticalGroup(
-            ly.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(ly.createSequentialGroup()
-                .addContainerGap()
-                // start components
-                .addGroup(ly.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                )
-            )
-        );
-    ]]),
-
-    ps("menu", [[
-int opt;
-do {
-    System.out.println("-- Menu --");
-    opt = in.nextInt();
-    switch(opt) {
-        case 1:
-            break;
-        case 2:
-            break;
-        case 3:
-            break;
-        case 4:
-            break;
-        default:
-            System.out.println("Opcion no valida");
+      local file = io.popen(command, "r")
+      local res = { "$ " .. snip.captures[1] }
+      for line in file:lines() do
+        table.insert(res, line)
+      end
+      return res
+    end, {}, "ls"),
+    {
+      -- Don't show this one, because it's not useful as a general purpose snippet.
+      show_condition = function()
+        return false
+      end,
     }
-} while(opt != 4);]]),
-
-})
-
-ls.add_snippets("html", {
-  ps("!", "<!DOCTYPE html>\n<html lang=\"en\">\n\t<head>\n\t$1\n\t</head>\n\t<body>\n\t$0\n\t</body>\n</html"),
-  ps("script", '<script src="$0"></script>')
-})
-
-ls.add_snippets("php", {
-    ps("html", "<!doctype html>\n<html lang=\"en\">\n<head>\n</head>\n<body>\n</body>\n</html>"),
-    ps("title", "<title>$0</title>"),
-    ps("div", "<div>$0</div>"),
-    ps("class", "class=\"$0\""),
-    ps("btbtn", "<a href=\"#\" class=\"btn btn-primary active\"></a>"),
-})
-
-ls.add_snippets("tex", { -- LATEX
-  -- General
-  ps("doc",
-[[
-\documentclass{article}
-
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[english]{babel}
-\usepackage[document]{ragged2e}
-
-\usepackage{amsfonts}
-\usepackage{natbib}
-\usepackage[dvipsnames]{xcolor}
-\usepackage{graphicx}
-
-\usepackage[fleqn]{amsmath}
-\usepackage{amssymb}
-
-\title{$1}
-\author{Victor Gerardo Rodríguez Barragán}
-\date{$2}
-
-\begin{document}
-\maketitle
-$0
-
-\end{document}]]
   ),
-  s("bg", fmt("\\begin{{{}}}\n\\end{{{}}}", { i(1, ""), rep(1) })),
-  s("bgs", fmt("\\begin{{{}}}\\end{{{}}}", { i(1, ""), rep(1) })),
-  ps("im", '\\includegraphics[width=$1\\textwidth]{$2}$0'),
-  ps("ims", '\\includegraphics[width=$1\\textwidth]{/home/' .. USERNAME .. '/Pictures/screenshots/sele/$2}$0'),
-  ps("s", '\\section{$1}$0'),
-  ps("ss", '\\section*{$1}$0'),
-  ps("sb", '\\subsection{$1}$0'),
-  ps("ssb", '\\subsection*{$1}$0'),
-  ps("sbb", '\\subsubsection{$1}$0'),
-  -- Text
-  ps("tc", "\\textcolor{$1}{$2}$0"),
-  ps("tu", "\\underline{$1}$0"),
-  ps("tb", "\\textbf{$1}$0"),
-  ps("en", "\\begin{enumerate}\n\\item $0\n\\end{enumerate}"),
-  ps("it", "\\item $0"),
-  ps("t", "\\text{$1}$0"),
-  ps("vs", "\\vspace{$1}$0"),
-  ps("vss", "\\vspace{0.5cm}$0"),
-
-  -- Math
-  ps("mk", "\\$$1\\$$0"),
-  ps("vc", "\\vec{$1}$0"),
-  ps("fc", "\\frac{$1}{$2}$0"),
-  ps("eq", "\\begin{equation}\n$0\n\\end{equation}"),
-  ps("al", "\\begin{align*}\n\t$0\n\\end{align*}"),
-  ps("nt", "\\notag"),
-  ps("mx", "\\begin{bmatrix}\n\t$0\n\\end{bmatrix}"),
-  ps("dc", "\\dotsc"),
-  -- OneLine
-  s("lbg", fmt("\\begin{{{}}}\\end{{{}}}", { i(1, ""), rep(1) })),
-  ps("lmx", "\\begin{bmatrix}$1\\end{bmatrix}$0"),
 })
 
+local js_attr_split = function(args)
+  local val = args[1][1]
+  local split = vim.split(val, ".", { plain = true })
+
+  local choices = {}
+  local thus_far = {}
+  for index = 0, #split - 1 do
+    table.insert(thus_far, 1, split[#split - index])
+    table.insert(choices, t { table.concat(thus_far, ".") })
+  end
+
+  return snippet_from_nodes(nil, c(1, choices))
+end
+
+local fill_line = function(char)
+  return function()
+    local row = vim.api.nvim_win_get_cursor(0)[1]
+    local lines = vim.api.nvim_buf_get_lines(0, row - 2, row, false)
+    return string.rep(char, #lines[1])
+  end
+end
+
+ls.add_snippets(
+  "rst",
+  make {
+    jsa = {
+      ":js:attr:`",
+      d(2, js_attr_split, { 1 }),
+      " <",
+      i(1),
+      ">",
+      "`",
+    },
+
+    link = { ".. _", i(1), ":" },
+
+    head = f(fill_line "=", {}),
+    sub = f(fill_line "-", {}),
+    subsub = f(fill_line "^", {}),
+
+    ref = { ":ref:`", same(1), " <", i(1), ">`" },
+  }
+)
+
+for _, ft_path in ipairs(vim.api.nvim_get_runtime_file("lua/furry/snips/lg/*.lua", true)) do
+  loadfile(ft_path)()
+end
+
+-- <c-k> is my expansion key
+-- this will expand the current item or jump to the next item within the snippet.
 vim.keymap.set({ "i", "s" }, "<c-k>", function()
   if ls.expand_or_jumpable() then
     ls.expand_or_jump()
   end
 end, { silent = true })
 
+-- <c-j> is my jump backwards key.
+-- this always moves to the previous item within the snippet
 vim.keymap.set({ "i", "s" }, "<c-j>", function()
   if ls.jumpable(-1) then
     ls.jump(-1)
   end
 end, { silent = true })
 
+-- <c-l> is selecting within a list of options.
+-- This is useful for choice nodes (introduced in the forthcoming episode 2)
 vim.keymap.set("i", "<c-l>", function()
   if ls.choice_active() then
     ls.change_choice(1)
   end
 end)
 
-ls.add_snippets("all", {
-  s("ternary", {
-    i(1, "cond"), t(" ? "), i(2, "then"), t(" : "), i(3, "else")
-  })
-})
+vim.keymap.set("i", "<c-u>", require "luasnip.extras.select_choice")
+
+-- shorcut to source my luasnips file again, which will reload my snippets
+vim.keymap.set("n", "<leader><leader>s", "<cmd>source ~/.config/nvim/after/plugin/luasnip.lua<CR>")

@@ -1,0 +1,3 @@
+[submodule ".config/furry-nvim"]
+	path = .config/furry-nvim
+	url = https://github.com/awtGerry/furry-nvim.git

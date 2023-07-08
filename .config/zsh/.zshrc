@@ -33,8 +33,8 @@ _comp_options+=(globdots)
 # Cargar configuraciones & atajos
 # Programas
 export EDITOR="nvim"
-export TERMINAL="alacritty"
-export BROWSER="librewolf"
+export TERMINAL="wezterm"
+export BROWSER="brave"
 export MUSIC="spotify"
 
 # shortcuts
@@ -49,12 +49,14 @@ export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CACHE_HOME="$HOME/.cache"
 
 export CARGO_HOME="$XDG_DATA_HOME/cargo"
+export PATH="$PATH:$CARGO_HOME/bin"
 export GOPATH="$XDG_DATA_HOME/go"
+export PATH=$PATH:$GOPATH/bin
 export GOMODCACHE="$XDG_CACHE_HOME/go/mod"
 
 # Plugins
 # Power level Theme.
-source /home/$USER/.config/zsh/plugins/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
+source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 [[ ! -f ~/.config/zsh/.p10k.zsh ]] || source ~/.config/zsh/.p10k.zsh
 # Syntax highlight
-source /home/$USER/.config/zsh/plugins/fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh 2>/dev/null
+source /usr/share/zsh/plugins/fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh 2>/dev/null
