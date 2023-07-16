@@ -28,6 +28,7 @@ Downloads
 .config/xfce4
 .config/viewnior
 .config/zsh/plugins
+.config/test
 
 .local/lib
 .local/share

@@ -5,22 +5,21 @@ local beautiful = require("beautiful")
 local space = wibox.widget.textbox()
 local space2 = wibox.widget.textbox()
 
-local logo = require("lua.awt.bar.logo")
-local tags = require("lua.awt.bar.tags")
-local clock = require("lua.awt.bar.clock")
-local volume = require("lua.awt.bar.volume")
-local resources = require("lua.awt.bar.resources")
--- local battery = require("lua.awt.bar.battery")
-local network = require("lua.awt.bar.network")
+local logo = require("lua.bar.logo")
+local tags = require("lua.bar.tags")
+local clock = require("lua.bar.calendar.clock")
+local volume = require("lua.bar.volume.volume")
+local resources = require("lua.bar.resources")
+-- local battery = require("lua.bar.battery")
+local network = require("lua.bar.network")
 space:set_text(" ")
 space2:set_text("   ")
 
 local bar = function(s)
     local wbar = awful.wibar {
         position = "top",
-        -- height = 34,
         screen = s,
-        fg = beautiful.pink,
+        fg = beautiful.blue,
         bg = beautiful.bg_color
     }
     wbar:setup {

@@ -5,7 +5,9 @@ local gfs = require("gears.filesystem")
 local dpi = xresources.apply_dpi
 local themes_path = gfs.get_themes_dir()
 
-local colors = require("lua.awt.themes.colors.mocha")
+-- TODO: Change between themes easily
+local colors = require("lua.themes.colors.mocha") -- Dark theme
+-- local colors = require("lua.themes.colors.latte") -- Light theme
 
 local theme = {}
 
@@ -14,7 +16,7 @@ theme.font = "JetBrainsMono 14"
 
 -- Definir colores
 theme.fg_color      = colors.fg_color
-theme.fg_focus      = colors.blue
+theme.fg_focus      = colors.pink
 theme.fg_urgent     = colors.pink_3
 
 theme.bg_color      = colors.bg_color

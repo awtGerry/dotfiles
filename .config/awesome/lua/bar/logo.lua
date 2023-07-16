@@ -3,7 +3,7 @@ local wibox = require("wibox")
 
 local msg =
 [[
-<span foreground="#f38ba8" size="x-large"> 󰏩  </span>
+<span foreground="#04a5e5" size="x-large"> 󰏩  </span>
 ]]
 
 local logo = wibox.widget {

@@ -25,13 +25,13 @@ awful.keyboard.append_global_keybindings({
         {modkey, "Control"}, "q", awesome.quit,
         {description = "quit awesome", group = "awesome"}),
     awful.key(
-        {modkey, "Shift" }, "p", function () awful.screen.focused().mypromptbox:run() end,
-        {description = "run prompt", group = "awesome"}),
-    awful.key(
         {modkey}, "Return", function () awful.spawn(usr_default.TERMINAL) end,
         {description = "abre terminal", group = "programas"}),
     awful.key(
         {modkey,}, "p", function () awful.spawn(rofi) end,
+        {description = "abre menu", group = "programas"}),
+    awful.key(
+        {modkey, "Shift"}, "p", function () awful.spawn("rofi -modi emoji -show emoji") end,
         {description = "abre menu", group = "programas"}),
     awful.key(
         {modkey}, "w", function () awful.spawn(usr_default.BROWSER) end,

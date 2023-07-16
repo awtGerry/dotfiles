@@ -10,25 +10,25 @@ require("awful.hotkeys_popup.keys")
 
 awful.spawn.with_shell("~/.config/awesome/autostart.sh")
 
--- Modkey (Mod4 es tecla de Windows)
+-- Modkey (Mod4 es tecla de Windows / Super)
 modkey = "Mod4"
 
 -- Programas por defecto
 usr_default = {
     TERMINAL = "wezterm",
-    EDITOR = "wezterm -e " .. "nvim",
+    EDITOR = "nvim",
     BROWSER = "brave",
     FILE_MANAGER = "thunar",
     MUSIC = "spotify",
 }
 
--- require "lua.awt.configs"
-require "lua.awt.keys"
-require "lua.awt.themes"
-require "lua.awt.error"
+require "lua.configs"
+require "lua.keys"
+require "lua.themes"
+require "lua.error"
 
 -- Bar
-local bar = require "lua.awt.bar"
+local bar = require "lua.bar"
 awful.screen.connect_for_each_screen(function (s)
     bar(s)
     awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[2])

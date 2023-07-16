@@ -10,7 +10,7 @@ colors.overlay0 = "#6c7086"
 colors.overlay1 = "#7f849c"
 colors.overlay2 = "#9399b2"
 
-colors.blue = "#89b4fa"
+colors.blue = "#04a5e5"
 colors.blue_2 = "#89dceb"
 colors.blue_3 = "#94e2d5"
 
