@@ -20,8 +20,8 @@ function change_wall() {
 
 function power_opts() {
     ctl='systemctl'
-    dm_command="$(printf "lock\nleave dwm\nrenew dwm\nhibernate\nreboot\nshutdown\nsleep\ndisplay off" | dmenu -i -p 'Action: ')"
-    case "$dm_command" in
+    opt=$(printf "  Apagar\n  Reiniciar\n  Suspender\n  Cerrar sesion" | rofi -dmenu -i -mesg "Sesion: $USER" -config ~/.config/rofi/power.rasi)
+    case "$opt" in
         'lock') slock ;;
         'leave dwm') kill -TERM "$(pgrep -u "$USER" "\bdwm$")" ;;
         'renew dwm') kill -HUP "$(pgrep -u "$USER" "\bdwm$")" ;;
@@ -34,67 +34,57 @@ function power_opts() {
     esac
 }
 
-function select_emoji() {
-    emoji=$(cut -d ';' -f1 ~/.dotfiles/.local/share/icons/emoji | dmenu -i -l 30 | sed "s/ .*//")
-    if [ -n "$opt" ]; then
-        xdotool type "$emoji"
-    else
-        printf "$emoji" | xclip -selection clipboard
-        dunstify "'$emoji' copiado al clipboard."
-    fi
-}
-
 function select_display() {
-    multimon() {
-        mirror=$(printf "no\\nyes" | dmenu -i -p "Mirror displays?")
-        if [ "$mirror" = "yes" ]; then
-            external=$(echo "$all_screens" | dmenu -i -p "Optimize resolution for:")
-            internal=$(echo "$all_screens" | grep -v "$external")
 
-            res_external=$(xrandr --query | sed -n "/^$external/,/\+/p" | \
-                tail -n 1 | awk '{print $1}')
-            res_internal=$(xrandr --query | sed -n "/^$internal/,/\+/p" | \
-                tail -n 1 | awk '{print $1}')
-
-            res_ext_x=$(echo "$res_external" | sed 's/x.*//')
-            res_ext_y=$(echo "$res_external" | sed 's/.*x//')
-            res_int_x=$(echo "$res_internal" | sed 's/x.*//')
-            res_int_y=$(echo "$res_internal" | sed 's/.*x//')
-
-            scale_x=$(echo "$res_ext_x / $res_int_x" | bc -l)
-            scale_y=$(echo "$res_ext_y / $res_int_y" | bc -l)
-
-            xrandr --output "$external" --auto --scale 1.0x1.0 \
-                --output "$internal" --auto --same-as "$external" \
-                --scale "$scale_x"x"$scale_y"
-        else
-
-            primary=$(echo "$all_screens" | dmenu -i -p "Seleccione el monitor principal:")
-            secondary=$(echo "$all_screens" | grep -v "$primary")
-            direction=$(printf "left\\nright" | dmenu -i -p "En que lado de $primary debe estar $secondary?")
-            xrandr --output "$primary" --primary --auto --scale 1.0x1.0 --output "$secondary" --"$direction"-of "$primary" --auto --scale 1.0x1.0
-        fi
+    una_pantalla() {
+        xrandr --output "$1" --auto --scale 1.0x1.0 $(echo "$monitors" | grep -v "\b$1" | awk '{print "--output", $1, "--off"}' | paste -sd ' ' -)
     }
 
-    onescreen() {
-        xrandr --output "$1" --auto --scale 1.0x1.0 $(echo "$monitors" | grep -v "\b$1" | awk '{print "--output", $1, "--off"}' | paste -sd ' ' -)
+    duplicar_pantalla() {
+        external=$(echo "$all_screens" | rofi -dmenu -i -mesg "Seleccione monitor principal:" -config ~/.config/rofi/opt_menu.rasi)
+        internal=$(echo "$all_screens" | grep -v "$external")
+
+        res_external=$(xrandr --query | sed -n "/^$external/,/\+/p" | \
+            tail -n 1 | awk '{print $1}')
+        res_internal=$(xrandr --query | sed -n "/^$internal/,/\+/p" | \
+            tail -n 1 | awk '{print $1}')
+
+        res_ext_x=$(echo "$res_external" | sed 's/x.*//')
+        res_ext_y=$(echo "$res_external" | sed 's/.*x//')
+        res_int_x=$(echo "$res_internal" | sed 's/x.*//')
+        res_int_y=$(echo "$res_internal" | sed 's/.*x//')
+
+        scale_x=$(echo "$res_ext_x / $res_int_x" | bc -l)
+        scale_y=$(echo "$res_ext_y / $res_int_y" | bc -l)
+
+        xrandr --output "$external" --auto --scale 1.0x1.0 \
+            --output "$internal" --auto --same-as "$external" \
+            --scale "$scale_x"x"$scale_y"
+    }
+
+    extender_pantalla() {
+        primary=$(echo "$all_screens" | rofi -dmenu -i -mesg "Seleccione el monitor principal:" -config ~/.config/rofi/opt_menu.rasi)
+        secondary=$(echo "$all_screens" | grep -v "$primary")
+        direction=$(printf "left\\nright" | rofi -dmenu -i -mesg "En que lado de $primary debe estar $secondary?" -config ~/.config/rofi/opt_menu.rasi)
+        xrandr --output "$primary" --primary --auto --scale 1.0x1.0 --output "$secondary" --"$direction"-of "$primary" --auto --scale 1.0x1.0
     }
 
     monitors=$(xrandr -q | grep "connected")
     all_screens=$(echo "$monitors" | awk '/ connected/ {print $1}')
-    menu=$(printf "%s\\nmulti-monitor\\nmanual selection" "$all_screens" | dmenu -i -p "Menu:") &&
+    menu=$(printf "%s\\nExtender pantalla\\nDuplicar pantalla" "$all_screens" | rofi -dmenu -i -mesg "Proyectar:" -config ~/.config/rofi/opt_menu.rasi) &&
         case "$menu" in
-	        "multi-monitor") multimon ;;
-	        *) onescreen "$menu" ;;
+	        "Extender pantalla") extender_pantalla ;;
+            "Duplicar pantalla") duplicar_pantalla ;;
+	        *) una_pantalla "$menu" ;;
         esac
-    xrandr --output DP-1 --mode 1920x1080 --rate 144
+    xrandr --output DP-1 --mode 1920x1080 --rate 144 # TODO: remove this line
     awt --walls
 }
 
 function screenshot() {
     output="$(date '+%Y-%m-%d_%H:%M-%S').png"
     xclip_cmd="xclip -sel clip -t image/png"
-    path="/home/gerry/Pictures/screenshots"
+    path="$HOME/Pictures/screenshots"
 
     case "$(printf "✂️ Seleccionar area\\n🪟 Ventana\\n📷 Toda la pantalla\\n✂️ Seleccionar area (copia)\\n🪟 Ventana (copia)\\n📷 Toda la pantalla (copia)" | rofi -dmenu)" in
         "✂️ Seleccionar area") maim -s "$path"/select/screenshot"${output}" ;;
@@ -218,71 +208,6 @@ function record() {
         *selected) videoselected;;
         kill) killrecording;;
         *) ([ -f /tmp/recordingpid ] && asktoend && exit) || askrecording;;
-    esac
-}
-
-function show_resources() {
-    df_check_location='/home'
-
-    # Memoria
-    free_output=$(free -h | grep Mem)
-    MEMUSED=$(echo $free_output | awk '{print $3}')
-    MEMTOT=$(echo $free_output | awk '{print $2}')
-
-    # CPU
-    CPU=$(top -bn1 | grep Cpu | awk '{print $2}')%
-    CPUTEMP=$( sensors | grep -m 1 temp1 | awk '{print $2}' )
-
-    # Disco
-    df_output=$(df -h $df_check_location | tail -n 1)
-    DISCUSED=$(echo $df_output | awk '{print $3}')
-    DISCTOT=$(echo $df_output | awk '{print $2}')
-    DISCPER=$(echo $df_output | awk '{print $5}')
-
-    # TODO: Cambiar a solo una notificacion (maybe).
-    notify-send -i "memory" -t 9000 \
-    "MEMORIA: ${MEMUSED}:${MEMTOT}"
-    notify-send -i "cpu" -t 9000 \
-    "CPU: ${CPU}"
-    notify-send -i "temp" -t 9000 \
-    "TEMPERATURA: ${CPUTEMP}"
-    notify-send -i "disk" -t 9000 \
-    "DISCO: ${DISCUSED}:${DISCTOT} -> ${DISCPER}"
-}
-
-function compile() {
-    dir=${file%/*}
-    base="${file%.*}"
-    ext="${file##*.}"
-
-    cd "$dir" || exit 1
-
-    case "$ext" in
-        [0-9]) preconv "$file" | refer -PS -e | groff -mandoc -T pdf > "$base".pdf ;;
-        c) cc "$file" -o "$base" && "$base" ;;
-        cpp) g++ "$file" -o "$base" && "$base" ;;
-        cs) mcs "$file" && mono "$base".exe ;;
-        go) go run "$file" ;;
-        h) sudo make install ;;
-        java) javac -d classes "$file" && java -cp classes "${1%.*}" ;;
-        m) octave "$file" ;;
-        md)	if  [ -x "$(command -v lowdown)" ]; then
-                lowdown --parse-no-intraemph "$file" -Tms | groff -mpdfmark -ms -kept -T pdf > "$base".pdf
-            elif [ -x "$(command -v groffdown)" ]; then
-                groffdown -i "$file" | groff -T pdf > "$base".pdf
-            else
-                pandoc -t ms --highlight-style=kate -s -o "$base".pdf "$file"
-            fi ; ;;
-        mom) preconv "$file" | refer -PS -e | groff -mom -kept -T pdf > "$base".pdf ;;
-        ms) preconv "$file" | refer -PS -e | groff -me -ms -kept -T pdf > "$base".pdf ;;
-        org) emacs "$file" --batch -u "$USER" -f org-latex-export-to-pdf ;;
-        py) python "$file" ;;
-        [rR]md) Rscript -e "rmarkdown::render('$file', quiet=TRUE)" ;;
-        rs) cargo build ;;
-        sass) sassc -a "$file" "$base".css ;;
-        scad) openscad -o "$base".stl "$file" ;;
-        sent) setsid -f sent "$file" 2>/dev/null ;;
-        *) sed -n '/^#!/s/^#!//p; q' "$file" | xargs -r -I % "$file" ;;
     esac
 }
 
@@ -526,11 +451,10 @@ function change_brightness() {
 }
 
 case $1 in
-    --walls) new_wall="$2" change_wall ;;
-    --emoji) opt="$2" select_emoji ;;
-    --power) power_opts ;;
+    --walls|-w) new_wall="$2" change_wall ;;
+    --power|-s) power_opts ;;
     --res) show_resources ;;
-    --usb) case $2 in
+    --usb|-u) case $2 in
             m*) usb_mount ;;
             u*) usb_umount ;;
            esac ;;
@@ -539,13 +463,13 @@ case $1 in
                 s) xrandr --output DP-1 --primary --mode 1920x1080 --rate 144 ;;
             esac
             awt --walls ;;
-    --display) select_display ;;
-    --record) opt="$2" record ;;
+    --display|--screen|--pantalla*|-p) select_display ;;
+    --record|-r) opt="$2" record ;;
     --comp*) file=$(readlink -f "$2") compile ;;
     --lsp) lang="$2" lsp_install ;;
-    --maim|--screenshot|--captura) screenshot ;;
+    --maim|--screenshot|--captura|-c) screenshot ;;
     --bat*) bat_opt="$2" battery ;;
-    --keys) key_opt="$2" change_key ;;
-    --bright*) bright_opt="$2" change_brightness ;;
-    --volume) vol_opt="$2" change_vol ;;
+    --keys|-k) key_opt="$2" change_key ;;
+    --bright*|-b) bright_opt="$2" change_brightness ;;
+    --volume|-v) vol_opt="$2" change_vol ;;
 esac
