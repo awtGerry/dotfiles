@@ -20,16 +20,14 @@ function change_wall() {
 
 function power_opts() {
     ctl='systemctl'
-    opt=$(printf "  Apagar\n  Reiniciar\n  Suspender\n  Cerrar sesion" | rofi -dmenu -i -mesg "Sesion: $USER" -config ~/.config/rofi/power.rasi)
+    opt=$(printf "  Bloquear\n󱣻  Hibernar\n  Apagar\n  Reiniciar\n  Suspender\n  Cerrar sesion" | rofi -dmenu -i -mesg "Sesion: $USER" -config ~/.config/rofi/power.rasi)
     case "$opt" in
-        'lock') slock ;;
-        'leave dwm') kill -TERM "$(pgrep -u "$USER" "\bdwm$")" ;;
-        'renew dwm') kill -HUP "$(pgrep -u "$USER" "\bdwm$")" ;;
-        'hibernate') slock $ctl hibernate -i ;;
-        'sleep') slock $ctl suspend ;;
-        'reboot') sudo $ctl reboot -i ;;
-        'shutdown') shutdown now ;;
-        'display off') xset dpms force off ;;
+        '  Bloquear') slock ;;
+        '󱣻  Hibernar') slock $ctl hibernate -i ;;
+        '  Suspender') slock $ctl suspend ;;
+        '  Reiniciar') sudo $ctl reboot -i ;;
+        '  Apagar') shutdown now ;;
+        '  Cerrar sesion') logout || pkill -KILL -u "$USER" ;;
         *) exit 1 ;;
     esac
 }
