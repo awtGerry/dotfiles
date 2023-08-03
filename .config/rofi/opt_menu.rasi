@@ -1,5 +1,3 @@
-
-
 * {
   /* Default background color */
   background-color: #282738;
@@ -13,7 +11,7 @@ window {
   border:       5px;
   border-radius: 10px;
   background-color: #282738;
-  width: 380px;
+  width: 600px;
 }
 
 mainbox {
@@ -21,17 +19,6 @@ mainbox {
   children: [message,listview];
 }
 
-message {
-    enabled:                     true;
-    margin:                      0px 50px;
-    padding:                     15px;
-    border:                      0px solid;
-    border-radius:               15px;
-    border-color:                inherit;
-    background-color:            inherit;
-    text-color:                  inherit;
-    size:                        300em;
-}
 textbox {
     background-color:            inherit;
     text-color:                  inherit;
@@ -70,7 +57,7 @@ listview, message {
   border-radius: 10px;
   background-color: #282738;
   columns: 1;
-  lines: 6;
+  lines: 4;
 }
 listview {
   border:       5px 5px 5px 5px;
