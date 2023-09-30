@@ -32,3 +32,6 @@ Downloads
 .local/lib
 .local/share
 .local/state
+
+target/
+node_modules/

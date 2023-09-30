@@ -1,3 +1,6 @@
+use crate::components::date;
+
+// insert components/date.rs
 #[link(name = "X11")]
 extern "C" {
     // https://www.x.org/releases/X11R7.5/doc/man/man3/XOpenDisplay.3.html
@@ -9,9 +12,11 @@ extern "C" {
 pub fn display_bar() {
     let display = unsafe { XOpenDisplay(0 as *const u8) };
     let root = unsafe { XDefaultRootWindow(display) };
+    let date = date::get_date();
     loop {
-        unsafe { XStoreName(display, root, "date test\0".as_ptr()) };
-
-        // std::thread::sleep(std::time::Duration::from_millis(1000));
+        unsafe { XStoreName(display, root, "Hi\0".as_ptr()) };
+        unsafe { XStoreName(display, root, date.as_ptr()) };
+    
+        std::thread::sleep(std::time::Duration::from_nanos((1e9 / 144.) as u64));
     }
 }
