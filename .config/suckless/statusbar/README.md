@@ -1,1 +1,0 @@
-# Statusbar for dwm
