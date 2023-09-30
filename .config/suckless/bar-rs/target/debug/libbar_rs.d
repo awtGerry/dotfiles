@@ -1,0 +1,1 @@
+/home/gerry/projects/dotfiles/.config/suckless/bar-rs/target/debug/libbar_rs.rlib: /home/gerry/projects/dotfiles/.config/suckless/bar-rs/src/bar.rs /home/gerry/projects/dotfiles/.config/suckless/bar-rs/src/components/date.rs /home/gerry/projects/dotfiles/.config/suckless/bar-rs/src/components/mod.rs /home/gerry/projects/dotfiles/.config/suckless/bar-rs/src/lib.rs
