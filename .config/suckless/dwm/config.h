@@ -23,22 +23,24 @@ static const int smartgaps          = 0;        /* 1 means no outer gap when the
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 
-static const char *fonts[]          = { "monospace:size=10" };
-static const char dmenufont[]       = "monospace:size=10";
+static const char *fonts[]          = { "Segoe UI:size=14" };
+static const char dmenufont[]       = "JetBrainsMono Nerd Font:size=14";
+
+/* Define colors */
 static const char col_gray1[]       = "#222222";
 static const char col_gray2[]       = "#444444";
 static const char col_gray3[]       = "#bbbbbb";
 static const char col_gray4[]       = "#eeeeee";
-static const char col_cyan[]        = "#005577";
-static const char col_purple[]      = "#08D9D6";
+static const char col_cyan[]        = "#73c2fb";
+static const char col_purple[]      = "#ed2e38";
 static const char *colors[][3]      = {
 	/*                      fg         bg         border   */
 	[SchemeNorm]        = { col_gray3, col_gray1, col_gray2 },
-	[SchemeSel]         = { col_gray4, col_cyan,  col_purple  },
+	[SchemeSel]         = { col_gray1, col_cyan,  col_purple  },
 	[SchemeStatus]      = { col_gray3, col_gray1,  "#000000"  }, // Statusbar right {text,background,not used but cannot be empty}
-	[SchemeTagsSel]     = { col_gray4, col_cyan,  "#000000"  }, // Tagbar left selected {text,background,not used but cannot be empty}
+	[SchemeTagsSel]     = { col_gray1, col_cyan,  "#000000"  }, // Tagbar left selected {text,background,not used but cannot be empty}
 	[SchemeTagsNorm]    = { col_gray3, col_gray1,  "#000000"  }, // Tagbar left unselected {text,background,not used but cannot be empty}
-	[SchemeInfoSel]     = { col_gray4, col_cyan,  "#000000"  }, // infobar middle  selected {text,background,not used but cannot be empty}
+	[SchemeInfoSel]     = { col_gray1, col_cyan,  "#000000"  }, // infobar middle  selected {text,background,not used but cannot be empty}
 	[SchemeInfoNorm]    = { col_gray3, col_gray1,  "#000000"  }, // infobar middle  unselected {text,background,not used but cannot be empty}
 };
 
@@ -52,7 +54,7 @@ static const Rule rules[] = {
 	 */
 	/* class     instance  title           tags mask  isfloating  isterminal  noswallow  monitor */
 	{ "Gimp",    NULL,     NULL,           0,         1,          0,           0,        -1 },
-	{ "Firefox", NULL,     NULL,           1 << 8,    0,          0,          -1,        -1 },
+	{ "firefox", NULL,     NULL,           1 << 1,    False,      0,          -1,        2 },
 	{ "St",      NULL,     NULL,           0,         0,          1,           0,        -1 },
 	{ NULL,      NULL,     "Event Tester", 0,         0,          0,           1,        -1 }, /* xev */
 };
@@ -111,11 +113,17 @@ static const char *roficmd[] = {
 static const char *termcmd[]  = { TERMINAL, NULL };
 
 static const Key keys[] = {
-	/* modifier                     key             function        argument */
-	{ MODKEY,                       XK_p,           spawn,          {.v = roficmd } },
-	{ MODKEY|ShiftMask,             XK_Return,      spawn,          {.v = termcmd } },
-	{ MODKEY,                       XK_w,           spawn,          {.v = (const char*[]) { BROWSER, NULL } } },
-	{ MODKEY,                       XK_BackSpace,   spawn,          SHCMD("~/.local/bin/awt --power") },
+	/* modifier                     key         function        argument */
+	{ MODKEY,                       XK_q,       killclient,     {0} },
+	{ MODKEY|ControlMask|ShiftMask, XK_q,       quit,           {1} }, 
+	{ MODKEY,                       XK_w,       spawn,          {.v = (const char*[]) { BROWSER, NULL } } },
+	// { MODKEY|ShiftMask,             XK_w,       spawn,          },
+	{ MODKEY,                       XK_e,       spawn,          SHCMD(TERMINAL " -e lf") },
+	{ MODKEY|ShiftMask,             XK_e,       spawn,          {.v = (const char*[]) { "gimp", NULL } } },
+
+	{ MODKEY,                       XK_p,           spawn,      {.v = roficmd } },
+	{ MODKEY|ShiftMask,             XK_Return,      spawn,      {.v = termcmd } },
+	{ MODKEY,                       XK_BackSpace,   spawn,      SHCMD("~/.local/bin/awt --power") },
 
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,			            XK_s,		togglesticky,	{0} },
@@ -123,6 +131,7 @@ static const Key keys[] = {
 	STACKKEYS(MODKEY|ShiftMask,                push)
 	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
+	{ MODKEY,                       XK_f,      togglefullscr,  {0} },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY|Mod4Mask,              XK_h,      incrgaps,       {.i = +1 } },
@@ -143,7 +152,6 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_o,      incrovgaps,     {.i = -1 } },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
-	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_y,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_u,      setlayout,      {.v = &layouts[2]} },
@@ -165,7 +173,6 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_BackSpace, quit,        {0} },
-	{ MODKEY|ControlMask|ShiftMask, XK_q,      quit,           {1} }, 
 };
 
 /* button definitions */
