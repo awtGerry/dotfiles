@@ -14,9 +14,10 @@ pub fn display_bar() {
     loop {
         let date = components::date::get_date();
         let time = components::date::get_time();
+        let volume = components::volume::get_system_volume();
         let battery = (components::battery::set_battery_charge()).to_string();
 
-        let command = format!("{} {}  {}", battery, date, time);
+        let command = format!("{}{} {}  {}", volume, battery, date, time);
         unsafe { XStoreName(display, root, command.as_ptr()) };
 
         std::thread::sleep(std::time::Duration::from_nanos((1e9 / 144.) as u64));
