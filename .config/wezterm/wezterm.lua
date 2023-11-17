@@ -10,7 +10,7 @@ local font_name = "FiraCodeNerdFont"
 return {
 	front_end = "OpenGL",
 
-	color_scheme = 'Catppuccin Mocha',
+	color_scheme = 'rose-pine',
 
 	-- Font config
 	font = font_with_fallback(font_name),
@@ -29,7 +29,7 @@ return {
 		},
 	},
 	warn_about_missing_glyphs = false,
-	font_size = 14,
+	font_size = 20,
 	line_height = 1.0,
 	dpi = 96.0,
 
